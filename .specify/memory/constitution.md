@@ -1,50 +1,68 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+==================
+Version change: N/A → 1.0.0 (initial ratification)
+Modified principles: N/A (initial)
+Added sections:
+  - Core Principles (2 principles)
+  - Governance
+Removed sections:
+  - [SECTION_2_NAME] (unused - no additional constraints needed)
+  - [SECTION_3_NAME] (unused - no separate workflow section needed)
+  - Principles 3-5 (user specified only 2 principles)
+Templates requiring updates:
+  - .specify/templates/plan-template.md ✅ (Constitution Check section compatible)
+  - .specify/templates/spec-template.md ✅ (no changes needed)
+  - .specify/templates/tasks-template.md ✅ (no changes needed)
+Follow-up TODOs: None
+-->
+
+# Slack MCP Server Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Simplicity Over Complexity
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All implementations MUST favor the simplest solution that meets requirements.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- Any added complexity MUST be explicitly justified in writing
+- If a simpler alternative exists, it MUST be documented why it was rejected
+- Default to fewer abstractions, fewer layers, fewer files
+- "Simple" means: fewer moving parts, easier to understand, less to maintain
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: Complexity compounds over time. Unjustified complexity creates
+maintenance burden, slows development, and obscures intent.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Human-Reviewable Outputs
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+All artifacts produced during spec-kit development MUST be reviewable by a human
+in a single sitting.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- Scope of work MUST NOT be too broad to review in one pass
+- Code changes MUST NOT exceed what a reviewer can meaningfully assess
+- Specification documents MUST be concise enough to read and validate
+- If output exceeds reviewable size, it MUST be split into smaller increments
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: Unreviewed work is untrusted work. Large outputs bypass human
+judgment, increasing risk of errors, misunderstandings, and drift from intent.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other practices and guidelines in this project.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment Procedure**:
+1. Proposed changes MUST be documented with rationale
+2. Changes require explicit approval before adoption
+3. All amendments MUST include a migration plan for affected artifacts
+
+**Versioning Policy**:
+- MAJOR version: Principle removal or incompatible redefinition
+- MINOR version: New principle added or materially expanded guidance
+- PATCH version: Clarifications, wording, typo fixes
+
+**Compliance Review**:
+- All PRs and reviews MUST verify compliance with these principles
+- Violations MUST be flagged and resolved before merging
+- Use the Complexity Tracking table in plan.md to justify any necessary violations
+
+**Version**: 1.0.0 | **Ratified**: 2025-12-25 | **Last Amended**: 2025-12-25
