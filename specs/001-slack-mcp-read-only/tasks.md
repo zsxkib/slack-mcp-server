@@ -19,12 +19,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project directory structure per plan.md (src/, src/tools/, src/slack/, src/utils/, tests/)
-- [ ] T002 Initialize Node.js project with package.json (name: slack-mcp-server, type: module, engine: node >=20)
-- [ ] T003 [P] Install production dependencies (@modelcontextprotocol/sdk, @slack/web-api, zod)
-- [ ] T004 [P] Install dev dependencies (@types/node, typescript, vitest)
-- [ ] T005 [P] Create tsconfig.json with strict TypeScript settings and ESM output
-- [ ] T006 [P] Add npm scripts in package.json (build, start, test, lint)
+- [x] T001 Create project directory structure per plan.md (src/, src/tools/, src/slack/, src/utils/, tests/)
+- [x] T002 Initialize Node.js project with package.json (name: slack-mcp-server, type: module, engine: node >=20)
+- [x] T003 [P] Install production dependencies (@modelcontextprotocol/sdk, @slack/web-api, zod)
+- [x] T004 [P] Install dev dependencies (@types/node, typescript, vitest)
+- [x] T005 [P] Create tsconfig.json with strict TypeScript settings and ESM output
+- [x] T006 [P] Add npm scripts in package.json (build, start, test, lint)
 
 ---
 
@@ -34,15 +34,15 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Define Slack response type definitions (Channel, Message, Reaction, User, UserProfile, SearchResult) in src/slack/types.ts
-- [ ] T008 Define pagination types (CursorPaginationParams, CursorPaginationResult, PagePaginationParams, PagePaginationResult) in src/slack/types.ts
-- [ ] T009 Define error types (SlackMcpError, SlackErrorCode) in src/slack/types.ts
-- [ ] T010 Create Slack WebClient wrapper with token initialization and error handling in src/slack/client.ts
-- [ ] T011 [P] Implement error mapping utilities (Slack errors → MCP error responses) in src/utils/errors.ts
-- [ ] T012 [P] Implement cursor-based pagination helpers in src/utils/pagination.ts
-- [ ] T013 Create McpServer initialization with server name and version in src/server.ts
-- [ ] T014 Create server entry point with stdio transport connection in src/index.ts
-- [ ] T015 Verify foundational setup by running npm run build successfully
+- [x] T007 Define Slack response type definitions (Channel, Message, Reaction, User, UserProfile, SearchResult) in src/slack/types.ts
+- [x] T008 Define pagination types (CursorPaginationParams, CursorPaginationResult, PagePaginationParams, PagePaginationResult) in src/slack/types.ts
+- [x] T009 Define error types (SlackMcpError, SlackErrorCode) in src/slack/types.ts
+- [x] T010 Create Slack WebClient wrapper with token initialization and error handling in src/slack/client.ts
+- [x] T011 [P] Implement error mapping utilities (Slack errors → MCP error responses) in src/utils/errors.ts
+- [x] T012 [P] Implement cursor-based pagination helpers in src/utils/pagination.ts
+- [x] T013 Create McpServer initialization with server name and version in src/server.ts
+- [x] T014 Create server entry point with stdio transport connection in src/index.ts
+- [x] T015 Verify foundational setup by running npm run build successfully
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -56,11 +56,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Define Zod input schema for slack_list_channels (limit, cursor, exclude_archived) in src/tools/channels.ts
-- [ ] T017 [US1] Implement slack_list_channels tool calling conversations.list API in src/tools/channels.ts
-- [ ] T018 [US1] Map Slack channel response to Channel entity format in src/tools/channels.ts
-- [ ] T019 [US1] Handle pagination (nextCursor, hasMore) in slack_list_channels response in src/tools/channels.ts
-- [ ] T020 [US1] Register slack_list_channels tool with McpServer in src/server.ts
+- [x] T016 [US1] Define Zod input schema for slack_list_channels (limit, cursor, exclude_archived) in src/tools/channels.ts
+- [x] T017 [US1] Implement slack_list_channels tool calling conversations.list API in src/tools/channels.ts
+- [x] T018 [US1] Map Slack channel response to Channel entity format in src/tools/channels.ts
+- [x] T019 [US1] Handle pagination (nextCursor, hasMore) in slack_list_channels response in src/tools/channels.ts
+- [x] T020 [US1] Register slack_list_channels tool with McpServer in src/server.ts
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -74,13 +74,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Define Zod input schema for slack_get_channel_history (channel_id, limit, cursor, oldest, latest) in src/tools/messages.ts
-- [ ] T022 [P] [US2] Define Zod input schema for slack_get_thread_replies (channel_id, thread_ts, limit, cursor) in src/tools/messages.ts
-- [ ] T023 [US2] Implement slack_get_channel_history tool calling conversations.history API in src/tools/messages.ts
-- [ ] T024 [US2] Implement slack_get_thread_replies tool calling conversations.replies API in src/tools/messages.ts
-- [ ] T025 [US2] Map Slack message response to Message entity format (including reactions) in src/tools/messages.ts
-- [ ] T026 [US2] Handle pagination in both message tools responses in src/tools/messages.ts
-- [ ] T027 [US2] Register slack_get_channel_history and slack_get_thread_replies tools with McpServer in src/server.ts
+- [x] T021 [P] [US2] Define Zod input schema for slack_get_channel_history (channel_id, limit, cursor, oldest, latest) in src/tools/messages.ts
+- [x] T022 [P] [US2] Define Zod input schema for slack_get_thread_replies (channel_id, thread_ts, limit, cursor) in src/tools/messages.ts
+- [x] T023 [US2] Implement slack_get_channel_history tool calling conversations.history API in src/tools/messages.ts
+- [x] T024 [US2] Implement slack_get_thread_replies tool calling conversations.replies API in src/tools/messages.ts
+- [x] T025 [US2] Map Slack message response to Message entity format (including reactions) in src/tools/messages.ts
+- [x] T026 [US2] Handle pagination in both message tools responses in src/tools/messages.ts
+- [x] T027 [US2] Register slack_get_channel_history and slack_get_thread_replies tools with McpServer in src/server.ts
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -94,13 +94,13 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Define Zod input schema for slack_list_users (limit, cursor) in src/tools/users.ts
-- [ ] T029 [P] [US3] Define Zod input schema for slack_get_user_profile (user_id) in src/tools/users.ts
-- [ ] T030 [US3] Implement slack_list_users tool calling users.list API in src/tools/users.ts
-- [ ] T031 [US3] Implement slack_get_user_profile tool calling users.profile.get API in src/tools/users.ts
-- [ ] T032 [US3] Map Slack user/profile responses to User and UserProfile entity formats in src/tools/users.ts
-- [ ] T033 [US3] Handle pagination in slack_list_users response in src/tools/users.ts
-- [ ] T034 [US3] Register slack_list_users and slack_get_user_profile tools with McpServer in src/server.ts
+- [x] T028 [P] [US3] Define Zod input schema for slack_list_users (limit, cursor) in src/tools/users.ts
+- [x] T029 [P] [US3] Define Zod input schema for slack_get_user_profile (user_id) in src/tools/users.ts
+- [x] T030 [US3] Implement slack_list_users tool calling users.list API in src/tools/users.ts
+- [x] T031 [US3] Implement slack_get_user_profile tool calling users.profile.get API in src/tools/users.ts
+- [x] T032 [US3] Map Slack user/profile responses to User and UserProfile entity formats in src/tools/users.ts
+- [x] T033 [US3] Handle pagination in slack_list_users response in src/tools/users.ts
+- [x] T034 [US3] Register slack_list_users and slack_get_user_profile tools with McpServer in src/server.ts
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently
 
@@ -114,11 +114,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Define Zod input schema for slack_search_messages (query, sort, sort_dir, count, page) in src/tools/search.ts
-- [ ] T036 [US4] Implement slack_search_messages tool calling search.messages API in src/tools/search.ts
-- [ ] T037 [US4] Map Slack search response to SearchResult entity format in src/tools/search.ts
-- [ ] T038 [US4] Handle page-based pagination (total, page, pageCount) in search response in src/tools/search.ts
-- [ ] T039 [US4] Register slack_search_messages tool with McpServer in src/server.ts
+- [x] T035 [US4] Define Zod input schema for slack_search_messages (query, sort, sort_dir, count, page) in src/tools/search.ts
+- [x] T036 [US4] Implement slack_search_messages tool calling search.messages API in src/tools/search.ts
+- [x] T037 [US4] Map Slack search response to SearchResult entity format in src/tools/search.ts
+- [x] T038 [US4] Handle page-based pagination (total, page, pageCount) in search response in src/tools/search.ts
+- [x] T039 [US4] Register slack_search_messages tool with McpServer in src/server.ts
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -128,12 +128,12 @@
 
 **Purpose**: Final validation and improvements
 
-- [ ] T040 Verify all 6 MCP tools are registered and listed by server
-- [ ] T041 Test rate limit error handling returns proper retry information
-- [ ] T042 Test invalid_auth and missing_scope errors return clear messages
-- [ ] T042.1 Test channel_not_found, user_not_found, and thread_not_found errors return specific "not found" messages with invalid identifier
+- [x] T040 Verify all 6 MCP tools are registered and listed by server
+- [x] T041 Test rate limit error handling returns proper retry information
+- [x] T042 Test invalid_auth and missing_scope errors return clear messages
+- [x] T042.1 Test channel_not_found, user_not_found, and thread_not_found errors return specific "not found" messages with invalid identifier
 - [ ] T043 Run quickstart.md validation: configure Claude Desktop and test all tools manually
-- [ ] T044 Ensure npm run build produces clean output without errors
+- [x] T044 Ensure npm run build produces clean output without errors
 
 ---
 
