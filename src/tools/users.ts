@@ -29,7 +29,7 @@ function mapUser(user: SlackUser): User {
   };
 }
 
-const listUsersSchema = {
+const listUsersInputSchema = {
   limit: z
     .number()
     .min(1)
@@ -42,10 +42,32 @@ const listUsersSchema = {
     .describe("Pagination cursor from previous response"),
 };
 
-server.tool(
+const userSchema = z.object({
+  id: z.string().describe("User ID"),
+  name: z.string().describe("Username"),
+  realName: z.string().nullable().describe("User's real name"),
+  displayName: z.string().nullable().describe("User's display name"),
+  isBot: z.boolean().describe("Whether the user is a bot"),
+  isAdmin: z.boolean().describe("Whether the user is a workspace admin"),
+  deleted: z.boolean().describe("Whether the user account is deactivated"),
+});
+
+const listUsersOutputSchema = {
+  users: z.array(userSchema).describe("List of users"),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe("Cursor for next page, null if no more results"),
+  hasMore: z.boolean().describe("Whether more results are available"),
+};
+
+server.registerTool(
   "list_users",
-  "List all users in the Slack workspace",
-  listUsersSchema,
+  {
+    description: "List all users in the Slack workspace",
+    inputSchema: listUsersInputSchema,
+    outputSchema: listUsersOutputSchema,
+  },
   async ({ limit, cursor }) => {
     try {
       const client = getSlackClient();
@@ -90,14 +112,32 @@ server.tool(
   }
 );
 
-const getUserProfileSchema = {
+const getUserProfileInputSchema = {
   user_id: z.string().describe("User ID (e.g., U1234567890)"),
 };
 
-server.tool(
+const userProfileSchema = z.object({
+  displayName: z.string().describe("User's display name"),
+  realName: z.string().describe("User's real name"),
+  title: z.string().nullable().describe("User's job title"),
+  email: z.string().nullable().describe("User's email address"),
+  phone: z.string().nullable().describe("User's phone number"),
+  statusText: z.string().nullable().describe("User's current status text"),
+  statusEmoji: z.string().nullable().describe("User's current status emoji"),
+  image72: z.string().nullable().describe("URL to user's 72x72 avatar image"),
+});
+
+const getUserProfileOutputSchema = {
+  profile: userProfileSchema.describe("User profile information"),
+};
+
+server.registerTool(
   "get_user_profile",
-  "Get detailed profile information for a specific user",
-  getUserProfileSchema,
+  {
+    description: "Get detailed profile information for a specific user",
+    inputSchema: getUserProfileInputSchema,
+    outputSchema: getUserProfileOutputSchema,
+  },
   async ({ user_id }) => {
     try {
       const client = getSlackClient();

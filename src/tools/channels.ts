@@ -5,7 +5,7 @@ import type { Channel } from "../slack/types.js";
 import { mapSlackError, formatErrorForMcp } from "../utils/errors.js";
 import { buildCursorPaginationResult } from "../utils/pagination.js";
 
-const listChannelsSchema = {
+const listChannelsInputSchema = {
   limit: z
     .number()
     .min(1)
@@ -22,10 +22,32 @@ const listChannelsSchema = {
     .describe("Exclude archived channels (default: true)"),
 };
 
-server.tool(
+const channelSchema = z.object({
+  id: z.string().describe("Channel ID"),
+  name: z.string().describe("Channel name"),
+  topic: z.string().nullable().describe("Channel topic"),
+  purpose: z.string().nullable().describe("Channel purpose"),
+  memberCount: z.number().describe("Number of members in the channel"),
+  isArchived: z.boolean().describe("Whether the channel is archived"),
+  created: z.number().describe("Unix timestamp when channel was created"),
+});
+
+const listChannelsOutputSchema = {
+  channels: z.array(channelSchema).describe("List of channels"),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe("Cursor for next page, null if no more results"),
+  hasMore: z.boolean().describe("Whether more results are available"),
+};
+
+server.registerTool(
   "list_channels",
-  "List all public channels accessible to the bot in the Slack workspace",
-  listChannelsSchema,
+  {
+    description: "List all accessible public channels in the Slack workspace",
+    inputSchema: listChannelsInputSchema,
+    outputSchema: listChannelsOutputSchema,
+  },
   async ({ limit, cursor, exclude_archived }) => {
     try {
       const client = getSlackClient();

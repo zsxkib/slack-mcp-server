@@ -37,7 +37,31 @@ function mapMessage(msg: SlackMessage): Message {
   };
 }
 
-const channelHistorySchema = {
+const reactionSchema = z.object({
+  name: z.string().describe("Emoji name"),
+  count: z.number().describe("Number of users who reacted"),
+  users: z.array(z.string()).describe("User IDs who reacted"),
+});
+
+const messageSchema = z.object({
+  ts: z.string().describe("Message timestamp (unique identifier)"),
+  userId: z.string().describe("ID of the user who sent the message"),
+  text: z.string().describe("Message text content"),
+  threadTs: z.string().nullable().describe("Thread parent timestamp, if in a thread"),
+  replyCount: z.number().nullable().describe("Number of replies, if thread parent"),
+  reactions: z.array(reactionSchema).describe("Reactions on the message"),
+});
+
+const messagesOutputSchema = {
+  messages: z.array(messageSchema).describe("List of messages"),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe("Cursor for next page, null if no more results"),
+  hasMore: z.boolean().describe("Whether more results are available"),
+};
+
+const channelHistoryInputSchema = {
   channel_id: z.string().describe("Channel ID (e.g., C1234567890)"),
   limit: z
     .number()
@@ -53,10 +77,13 @@ const channelHistorySchema = {
   latest: z.string().optional().describe("Only messages before this timestamp"),
 };
 
-server.tool(
+server.registerTool(
   "get_channel_history",
-  "Retrieve message history from a specific channel",
-  channelHistorySchema,
+  {
+    description: "Retrieve message history from a specific channel",
+    inputSchema: channelHistoryInputSchema,
+    outputSchema: messagesOutputSchema,
+  },
   async ({ channel_id, limit, cursor, oldest, latest }) => {
     try {
       const client = getSlackClient();
@@ -104,7 +131,7 @@ server.tool(
   }
 );
 
-const threadRepliesSchema = {
+const threadRepliesInputSchema = {
   channel_id: z.string().describe("Channel ID containing the thread"),
   thread_ts: z.string().describe("Timestamp of the parent message"),
   limit: z
@@ -119,10 +146,14 @@ const threadRepliesSchema = {
     .describe("Pagination cursor from previous response"),
 };
 
-server.tool(
+server.registerTool(
   "get_thread_replies",
-  "Retrieve all replies in a message thread",
-  threadRepliesSchema,
+  {
+    description:
+      "Retrieve all replies in a message thread, including the parent message",
+    inputSchema: threadRepliesInputSchema,
+    outputSchema: messagesOutputSchema,
+  },
   async ({ channel_id, thread_ts, limit, cursor }) => {
     try {
       const client = getSlackClient();

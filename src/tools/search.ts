@@ -40,7 +40,7 @@ function mapSearchResult(match: SlackSearchMatch): SearchResult {
   };
 }
 
-const searchMessagesSchema = {
+const searchMessagesInputSchema = {
   query: z
     .string()
     .describe(
@@ -63,10 +63,31 @@ const searchMessagesSchema = {
   page: z.number().min(1).optional().describe("Page number (default: 1)"),
 };
 
-server.tool(
+const searchResultSchema = z.object({
+  ts: z.string().describe("Message timestamp"),
+  text: z.string().describe("Message text content"),
+  userId: z.string().describe("ID of the user who sent the message"),
+  username: z.string().describe("Username of the sender"),
+  channelId: z.string().describe("ID of the channel containing the message"),
+  channelName: z.string().describe("Name of the channel"),
+  permalink: z.string().describe("Direct link to the message"),
+});
+
+const searchMessagesOutputSchema = {
+  results: z.array(searchResultSchema).describe("Search results"),
+  total: z.number().describe("Total number of matching messages"),
+  page: z.number().describe("Current page number"),
+  pageCount: z.number().describe("Total number of pages"),
+};
+
+server.registerTool(
   "search_messages",
-  "Search for messages across all accessible channels",
-  searchMessagesSchema,
+  {
+    description:
+      "Search for messages across all accessible channels. Requires user token authentication.",
+    inputSchema: searchMessagesInputSchema,
+    outputSchema: searchMessagesOutputSchema,
+  },
   async ({ query, sort, sort_dir, count, page }) => {
     // Check if search is available (requires user token auth)
     if (!isSearchAvailable()) {
