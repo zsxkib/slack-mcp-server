@@ -130,3 +130,80 @@ export interface SlackMcpError {
   retryable: boolean;
   retryAfter?: number;
 }
+
+// Refresh-related types
+
+/**
+ * Error codes for credential refresh operations
+ */
+export type RefreshErrorCode =
+  | "NETWORK_ERROR" // Transient network issue
+  | "RATE_LIMITED" // Slack rate limit (429)
+  | "SESSION_REVOKED" // Credentials no longer valid
+  | "INVALID_RESPONSE" // Unexpected response format
+  | "STORAGE_ERROR" // Failed to persist credentials
+  | "REFRESH_IN_PROGRESS" // Another refresh already running
+  | "REFRESH_NOT_AVAILABLE" // Bot token auth, refresh not applicable
+  | "UNKNOWN"; // Unexpected error
+
+/**
+ * Status of refresh operations
+ */
+export type RefreshStatus = "idle" | "in_progress" | "succeeded" | "failed";
+
+/**
+ * Details about a refresh failure
+ */
+export interface RefreshError {
+  code: RefreshErrorCode;
+  message: string;
+  timestamp: Date;
+  attempt: number;
+  retryable: boolean;
+}
+
+/**
+ * Tracks the current status of refresh operations (in-memory only)
+ */
+export interface RefreshState {
+  status: RefreshStatus;
+  lastAttempt: Date | null;
+  lastSuccess: Date | null;
+  lastError: RefreshError | null;
+  consecutiveFailures: number;
+  isManualTrigger: boolean;
+}
+
+/**
+ * Configuration and timing for automatic refresh
+ */
+export interface RefreshSchedule {
+  intervalDays: number;
+  checkIntervalMs: number;
+  nextCheckAt: Date;
+  enabled: boolean;
+}
+
+/**
+ * Persisted credentials in JSON file
+ */
+export interface StoredCredentials {
+  version: 1;
+  credentials: {
+    token: string; // xoxc-prefixed user token
+    cookie: string; // xoxd-prefixed d cookie
+    workspace: string; // Workspace identifier
+  };
+  metadata: {
+    lastRefreshed: string; // ISO 8601 timestamp
+    refreshCount: number;
+    source: "initial" | "auto-refresh" | "manual-refresh";
+  };
+}
+
+/**
+ * Result of a refresh operation
+ */
+export type RefreshResult =
+  | { success: true; credentials: StoredCredentials }
+  | { success: false; error: RefreshError };

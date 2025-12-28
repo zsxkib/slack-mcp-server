@@ -129,22 +129,21 @@ server.registerTool(
         pageCount: paging?.pages ?? 1,
       };
 
+      const output = {
+        results: paginationResult.items,
+        total: paginationResult.total,
+        page: paginationResult.page,
+        pageCount: paginationResult.pageCount,
+      };
+
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              {
-                results: paginationResult.items,
-                total: paginationResult.total,
-                page: paginationResult.page,
-                pageCount: paginationResult.pageCount,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(output, null, 2),
           },
         ],
+        structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error);

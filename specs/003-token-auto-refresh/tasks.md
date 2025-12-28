@@ -23,9 +23,9 @@
 
 **Purpose**: Create project structure for refresh subsystem
 
-- [ ] T001 Create directory structure `src/refresh/` for refresh subsystem
-- [ ] T002 [P] Add refresh-related type definitions to `src/slack/types.ts` (StoredCredentials, RefreshState, RefreshError, RefreshSchedule, RefreshResult, RefreshErrorCode, RefreshStatus)
-- [ ] T003 [P] Add refresh-related error types to `src/utils/errors.ts` (RefreshError class with error codes)
+- [X] T001 Create directory structure `src/refresh/` for refresh subsystem
+- [X] T002 [P] Add refresh-related type definitions to `src/slack/types.ts` (StoredCredentials, RefreshState, RefreshError, RefreshSchedule, RefreshResult, RefreshErrorCode, RefreshStatus)
+- [X] T003 [P] Add refresh-related error types to `src/utils/errors.ts` (RefreshError class with error codes)
 
 ---
 
@@ -35,9 +35,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement credential storage module in `src/refresh/storage.ts` (load, save, exists methods with atomic writes and 0600 permissions)
-- [ ] T005 Create Zod validation schemas for StoredCredentials in `src/refresh/storage.ts` (validate token prefix xoxc-, cookie prefix xoxd-, workspace non-empty)
-- [ ] T006 [P] Add environment variable parsing for refresh config in `src/slack/client.ts` (SLACK_CREDENTIALS_PATH, SLACK_REFRESH_INTERVAL_DAYS, SLACK_WORKSPACE, SLACK_REFRESH_ENABLED)
+- [X] T004 Implement credential storage module in `src/refresh/storage.ts` (load, save, exists methods with atomic writes and 0600 permissions)
+- [X] T005 Create Zod validation schemas for StoredCredentials in `src/refresh/storage.ts` (validate token prefix xoxc-, cookie prefix xoxd-, workspace non-empty)
+- [X] T006 [P] Add environment variable parsing for refresh config in `src/slack/client.ts` (SLACK_CREDENTIALS_PATH, SLACK_REFRESH_INTERVAL_DAYS, SLACK_WORKSPACE, SLACK_REFRESH_ENABLED)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -51,19 +51,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Unit test for storage module in `tests/unit/storage.test.ts` (load, save, atomic writes, permissions, validation)
-- [ ] T008 [P] [US1] Unit test for RefreshManager in `tests/unit/refresh-manager.test.ts` (successful refresh flow, credential update, state transitions)
-- [ ] T009 [P] [US1] Unit test for scheduler in `tests/unit/scheduler.test.ts` (interval checks, trigger on due, start/stop)
+- [X] T007 [P] [US1] Unit test for storage module in `tests/unit/storage.test.ts` (load, save, atomic writes, permissions, validation)
+- [X] T008 [P] [US1] Unit test for RefreshManager in `tests/unit/refresh-manager.test.ts` (successful refresh flow, credential update, state transitions)
+- [X] T009 [P] [US1] Unit test for scheduler in `tests/unit/scheduler.test.ts` (interval checks, trigger on due, start/stop)
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Implement RefreshManager class in `src/refresh/manager.ts` (orchestrate refresh lifecycle, call Slack workspace to refresh both xoxc token and d cookie)
-- [ ] T011 [US1] Implement HTTP request to Slack workspace in `src/refresh/manager.ts` (GET https://[workspace].slack.com with d cookie, parse api_token from body and new d cookie from Set-Cookie header)
-- [ ] T012 [US1] Implement credential validation in `src/refresh/manager.ts` (validate refreshed credentials before replacing current ones using auth.test API)
-- [ ] T013 [US1] Implement RefreshScheduler class in `src/refresh/scheduler.ts` (interval-based refresh check every hour, calculate next refresh due date)
-- [ ] T014 [US1] Extend SlackClient with refresh capability in `src/slack/client.ts` (integrate with RefreshManager, use persisted credentials)
-- [ ] T015 [US1] Integrate refresh initialization on server startup in `src/server.ts` (validate credentials, initialize refresh scheduling for user token auth)
-- [ ] T016 [US1] Add logging for refresh events in `src/refresh/manager.ts` (success, scheduled next refresh)
+- [X] T010 [US1] Implement RefreshManager class in `src/refresh/manager.ts` (orchestrate refresh lifecycle, call Slack workspace to refresh both xoxc token and d cookie)
+- [X] T011 [US1] Implement HTTP request to Slack workspace in `src/refresh/manager.ts` (GET https://[workspace].slack.com with d cookie, parse api_token from body and new d cookie from Set-Cookie header)
+- [X] T012 [US1] Implement credential validation in `src/refresh/manager.ts` (validate refreshed credentials before replacing current ones using auth.test API)
+- [X] T013 [US1] Implement RefreshScheduler class in `src/refresh/scheduler.ts` (interval-based refresh check every hour, calculate next refresh due date)
+- [X] T014 [US1] Extend SlackClient with refresh capability in `src/slack/client.ts` (integrate with RefreshManager, use persisted credentials)
+- [X] T015 [US1] Integrate refresh initialization on server startup in `src/server.ts` (validate credentials, initialize refresh scheduling for user token auth)
+- [X] T016 [US1] Add logging for refresh events in `src/refresh/manager.ts` (success, scheduled next refresh)
 
 **Checkpoint**: Automatic credential refresh works end-to-end. Server can run continuously with credentials auto-refreshed every 7 days.
 
@@ -77,17 +77,17 @@
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Unit test for retry logic in `tests/unit/refresh-manager.test.ts` (exponential backoff, max 3 attempts, jitter)
-- [ ] T018 [P] [US2] Unit test for error classification in `tests/unit/refresh-manager.test.ts` (NETWORK_ERROR retryable, SESSION_REVOKED not retryable)
+- [X] T017 [P] [US2] Unit test for retry logic in `tests/unit/refresh-manager.test.ts` (exponential backoff, max 3 attempts, jitter)
+- [X] T018 [P] [US2] Unit test for error classification in `tests/unit/refresh-manager.test.ts` (NETWORK_ERROR retryable, SESSION_REVOKED not retryable)
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Implement retry with exponential backoff in `src/refresh/manager.ts` (base 1s, multiplier 2x, max 30s cap, +/-25% jitter, max 3 attempts)
-- [ ] T020 [US2] Implement error classification in `src/refresh/manager.ts` (NETWORK_ERROR, RATE_LIMITED, SESSION_REVOKED, INVALID_RESPONSE, STORAGE_ERROR)
-- [ ] T021 [US2] Implement graceful degradation in `src/refresh/manager.ts` (continue with existing credentials when refresh fails until they expire)
-- [ ] T022 [US2] Add detailed error logging in `src/refresh/manager.ts` (log all refresh events: success, failure, retry with error details)
-- [ ] T023 [US2] Implement session revoked handling in `src/refresh/manager.ts` (detect SESSION_REVOKED, notify with guidance on resolution)
-- [ ] T024 [US2] Track consecutive failures in RefreshState in `src/refresh/manager.ts` (reset on success, increment on failure)
+- [X] T019 [US2] Implement retry with exponential backoff in `src/refresh/manager.ts` (base 1s, multiplier 2x, max 30s cap, +/-25% jitter, max 3 attempts)
+- [X] T020 [US2] Implement error classification in `src/refresh/manager.ts` (NETWORK_ERROR, RATE_LIMITED, SESSION_REVOKED, INVALID_RESPONSE, STORAGE_ERROR)
+- [X] T021 [US2] Implement graceful degradation in `src/refresh/manager.ts` (continue with existing credentials when refresh fails until they expire)
+- [X] T022 [US2] Add detailed error logging in `src/refresh/manager.ts` (log all refresh events: success, failure, retry with error details)
+- [X] T023 [US2] Implement session revoked handling in `src/refresh/manager.ts` (detect SESSION_REVOKED, notify with guidance on resolution)
+- [X] T024 [US2] Track consecutive failures in RefreshState in `src/refresh/manager.ts` (reset on success, increment on failure)
 
 **Checkpoint**: Refresh failures are handled gracefully. System logs detailed errors, retries with backoff, and continues operating with current credentials.
 
@@ -101,16 +101,16 @@
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Integration test for manual refresh in `tests/integration/refresh-flow.test.ts` (tool invocation, success response, error responses)
-- [ ] T026 [P] [US3] Unit test for refresh tool handler in `tests/unit/refresh-manager.test.ts` (concurrent request handling, REFRESH_IN_PROGRESS response)
+- [X] T025 [P] [US3] Integration test for manual refresh in `tests/integration/refresh-flow.test.ts` (tool invocation, success response, error responses)
+- [X] T026 [P] [US3] Unit test for refresh tool handler in `tests/unit/refresh-manager.test.ts` (concurrent request handling, REFRESH_IN_PROGRESS response)
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Create refresh_credentials MCP tool handler in `src/tools/refresh.ts` (input schema empty, output schema with success/failure discriminated union)
-- [ ] T028 [US3] Implement concurrent refresh guard in `src/refresh/manager.ts` (only one refresh at a time, return REFRESH_IN_PROGRESS for subsequent requests)
-- [ ] T029 [US3] Implement bot token check in `src/tools/refresh.ts` (return REFRESH_NOT_AVAILABLE for bot token auth)
-- [ ] T030 [US3] Register refresh_credentials tool in `src/server.ts` (add tool registration with description and schema)
-- [ ] T031 [US3] Implement manual trigger flag in RefreshState in `src/refresh/manager.ts` (distinguish auto vs manual refresh in logs and state)
+- [X] T027 [US3] Create refresh_credentials MCP tool handler in `src/tools/refresh.ts` (input schema empty, output schema with success/failure discriminated union)
+- [X] T028 [US3] Implement concurrent refresh guard in `src/refresh/manager.ts` (only one refresh at a time, return REFRESH_IN_PROGRESS for subsequent requests)
+- [X] T029 [US3] Implement bot token check in `src/tools/refresh.ts` (return REFRESH_NOT_AVAILABLE for bot token auth)
+- [X] T030 [US3] Register refresh_credentials tool in `src/server.ts` (add tool registration with description and schema)
+- [X] T031 [US3] Implement manual trigger flag in RefreshState in `src/refresh/manager.ts` (distinguish auto vs manual refresh in logs and state)
 
 **Checkpoint**: Manual refresh tool is available and works correctly. Operators can trigger refresh on-demand.
 
@@ -120,13 +120,13 @@
 
 **Purpose**: Final validation and improvements that affect multiple user stories
 
-- [ ] T032 End-to-end integration test in `tests/integration/refresh-flow.test.ts` (full refresh cycle: startup → auto-refresh → manual refresh → error handling)
-- [ ] T033 Validate implementation against quickstart.md scenarios
-- [ ] T034 [P] Verify backward compatibility with bot token authentication (no refresh, no persistence, no errors)
-- [ ] T035 [P] Ensure all environment variables documented and working (SLACK_CREDENTIALS_PATH, SLACK_REFRESH_INTERVAL_DAYS, SLACK_WORKSPACE, SLACK_REFRESH_ENABLED)
-- [ ] T036 Code cleanup and ensure consistent error handling patterns across refresh subsystem
-- [ ] T037 Run full test suite (`pnpm test`) and verify all tests pass
-- [ ] T038 Run linting (`pnpm run lint`) and fix any issues
+- [X] T032 End-to-end integration test in `tests/integration/refresh-flow.test.ts` (full refresh cycle: startup → auto-refresh → manual refresh → error handling)
+- [X] T033 Validate implementation against quickstart.md scenarios
+- [X] T034 [P] Verify backward compatibility with bot token authentication (no refresh, no persistence, no errors)
+- [X] T035 [P] Ensure all environment variables documented and working (SLACK_CREDENTIALS_PATH, SLACK_REFRESH_INTERVAL_DAYS, SLACK_WORKSPACE, SLACK_REFRESH_ENABLED)
+- [X] T036 Code cleanup and ensure consistent error handling patterns across refresh subsystem
+- [X] T037 Run full test suite (`pnpm test`) and verify all tests pass
+- [X] T038 Run linting (`pnpm run lint`) and fix any issues
 
 ---
 

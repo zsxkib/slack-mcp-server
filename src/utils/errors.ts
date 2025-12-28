@@ -1,4 +1,59 @@
-import type { SlackMcpError } from "../slack/types.js";
+import type { SlackMcpError, RefreshErrorCode } from "../slack/types.js";
+
+/**
+ * Error class for credential refresh failures
+ */
+export class RefreshError extends Error {
+  readonly code: RefreshErrorCode;
+  readonly retryable: boolean;
+  readonly timestamp: Date;
+  readonly attempt: number;
+
+  constructor(
+    code: RefreshErrorCode,
+    message: string,
+    options?: { retryable?: boolean; attempt?: number }
+  ) {
+    super(message);
+    this.name = "RefreshError";
+    this.code = code;
+    this.retryable = options?.retryable ?? isRetryableRefreshError(code);
+    this.timestamp = new Date();
+    this.attempt = options?.attempt ?? 1;
+  }
+
+  /**
+   * Converts the error to a plain object for serialization
+   */
+  toJSON(): {
+    code: RefreshErrorCode;
+    message: string;
+    timestamp: Date;
+    attempt: number;
+    retryable: boolean;
+  } {
+    return {
+      code: this.code,
+      message: this.message,
+      timestamp: this.timestamp,
+      attempt: this.attempt,
+      retryable: this.retryable,
+    };
+  }
+}
+
+/**
+ * Determines if a refresh error code is retryable
+ */
+export function isRetryableRefreshError(code: RefreshErrorCode): boolean {
+  const retryableCodes: RefreshErrorCode[] = [
+    "NETWORK_ERROR",
+    "RATE_LIMITED",
+    "STORAGE_ERROR",
+    "REFRESH_IN_PROGRESS",
+  ];
+  return retryableCodes.includes(code);
+}
 
 // Authentication error messages
 export const AUTH_ERRORS = {

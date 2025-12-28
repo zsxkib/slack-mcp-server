@@ -89,21 +89,20 @@ server.registerTool(
         response.response_metadata
       );
 
+      const output = {
+        users: result.items,
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
+      };
+
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              {
-                users: result.items,
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(output, null, 2),
           },
         ],
+        structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error);
@@ -161,13 +160,16 @@ server.registerTool(
         image72: profile?.image_72 ?? null,
       };
 
+      const output = { profile: userProfile };
+
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify({ profile: userProfile }, null, 2),
+            text: JSON.stringify(output, null, 2),
           },
         ],
+        structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error, { userId: user_id });

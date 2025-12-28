@@ -108,21 +108,20 @@ server.registerTool(
         response.response_metadata
       );
 
+      const output = {
+        messages: result.items,
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
+      };
+
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              {
-                messages: result.items,
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(output, null, 2),
           },
         ],
+        structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error, { channelId: channel_id });
@@ -177,21 +176,20 @@ server.registerTool(
         response.response_metadata
       );
 
+      const output = {
+        messages: result.items,
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
+      };
+
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              {
-                messages: result.items,
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(output, null, 2),
           },
         ],
+        structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error, {
