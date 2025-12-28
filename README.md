@@ -12,8 +12,9 @@ A read-only [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) ser
 | `list_users` | List all workspace users with pagination | Bot or User |
 | `get_user_profile` | Get detailed profile information for a specific user | Bot or User |
 | `search_messages` | Search messages across all channels | User only |
+| `refresh_credentials` | Manually trigger credential refresh | User only |
 
-All tools are **read-only** and support cursor-based pagination.
+All read tools support cursor-based pagination. The `refresh_credentials` tool enables automatic credential management for user token authentication.
 
 ## Installation
 
@@ -75,6 +76,40 @@ export SLACK_COOKIE_D=xoxd-your-cookie-here
 ```
 
 > **Note:** If both bot token and user token are configured, the bot token takes precedence.
+
+### Token Auto-Refresh (User Token Only)
+
+User tokens expire periodically. The server can automatically refresh credentials to maintain uninterrupted access.
+
+**Required for auto-refresh:**
+
+```bash
+export SLACK_USER_TOKEN=xoxc-your-token-here
+export SLACK_COOKIE_D=xoxd-your-cookie-here
+export SLACK_WORKSPACE=your-workspace-name  # e.g., "mycompany" from mycompany.slack.com
+```
+
+**Optional configuration:**
+
+```bash
+# Credential storage location (default: ~/.slack-mcp-server/credentials.json)
+export SLACK_CREDENTIALS_PATH=/custom/path/credentials.json
+
+# Refresh interval in days (default: 7)
+export SLACK_REFRESH_INTERVAL_DAYS=7
+
+# Enable/disable auto-refresh (default: true)
+export SLACK_REFRESH_ENABLED=true
+```
+
+**How it works:**
+
+1. On startup, credentials are loaded from storage (if available) or saved from environment variables
+2. Every hour, the system checks if refresh is due based on the configured interval
+3. When due, both xoxc token and d cookie are refreshed via a request to your workspace
+4. New credentials are persisted to the credentials file with secure permissions (0600)
+5. If refresh fails, retries occur with exponential backoff (max 3 attempts)
+6. You can also manually trigger refresh using the `refresh_credentials` tool
 
 ## Usage
 
@@ -161,11 +196,30 @@ Get detailed profile information for a specific user.
 Search for messages across all accessible channels. **Requires user token authentication.**
 
 **Parameters:**
+
 - `query` (required): Search query (supports Slack modifiers: `from:`, `in:`, `before:`, `after:`)
 - `sort` (optional): Sort by `score` or `timestamp` (default: score)
 - `sort_dir` (optional): Sort direction `asc` or `desc` (default: desc)
 - `count` (optional): Results per page (1-100, default: 20)
 - `page` (optional): Page number (default: 1)
+
+### refresh_credentials
+
+Manually trigger a refresh of Slack user credentials. **Requires user token authentication with `SLACK_WORKSPACE` configured.**
+
+**Parameters:** None
+
+**Returns:**
+
+- On success: `{ success: true, message, refreshedAt, totalRefreshes }`
+- On failure: `{ success: false, error: { code, message, retryable } }`
+
+**Error codes:**
+
+- `REFRESH_NOT_AVAILABLE` - Bot token auth or workspace not configured
+- `REFRESH_IN_PROGRESS` - Another refresh is already running
+- `SESSION_REVOKED` - Credentials invalidated, manual re-auth required
+- `NETWORK_ERROR` - Connectivity issue (retryable)
 
 ## Disclaimer
 
