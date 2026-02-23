@@ -7,6 +7,8 @@ import "./tools/messages.js";
 import "./tools/users.js";
 import "./tools/search.js";
 import "./tools/refresh.js";
+import "./tools/memory.js";
+import "./tools/error-log.js";
 
 // Import refresh functionality
 import {
@@ -15,6 +17,7 @@ import {
   getAuthType,
 } from "./slack/client.js";
 import { getScheduler } from "./refresh/scheduler.js";
+import { logError } from "./utils/error-log.js";
 
 /**
  * Initialize the credential refresh system
@@ -48,9 +51,16 @@ async function main() {
   try {
     await initializeRefresh();
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
     console.error(
-      `[Startup] Warning: Failed to initialize refresh system: ${error instanceof Error ? error.message : String(error)}`
+      `[Startup] Warning: Failed to initialize refresh system: ${msg}`
     );
+    logError({
+      level: "error",
+      component: "Startup",
+      code: "INIT_FAILED",
+      message: `Failed to initialize refresh system: ${msg}`,
+    });
     // Continue anyway - we can still work without refresh
   }
 

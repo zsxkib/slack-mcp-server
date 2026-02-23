@@ -243,7 +243,7 @@ export async function initializeFromStorage(): Promise<boolean> {
           config.workspace
         );
         saveCredentials(initialCredentials);
-        console.log("[Client] Initial credentials saved to storage");
+        console.error("[Client] Initial credentials saved to storage");
       }
       return false;
     }
@@ -257,7 +257,7 @@ export async function initializeFromStorage(): Promise<boolean> {
       stored.credentials.cookie
     );
 
-    console.log(
+    console.error(
       `[Client] Loaded credentials from storage. Last refreshed: ${stored.metadata.lastRefreshed}`
     );
     return true;

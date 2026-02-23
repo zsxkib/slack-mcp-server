@@ -8,6 +8,5 @@ export function buildCursorPaginationResult<T>(
   return {
     items,
     nextCursor: nextCursor && nextCursor.length > 0 ? nextCursor : null,
-    hasMore: nextCursor !== null && nextCursor.length > 0,
   };
 }

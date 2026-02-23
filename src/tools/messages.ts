@@ -1,9 +1,15 @@
 import { z } from "zod";
 import { server } from "../server.js";
 import { getSlackClient } from "../slack/client.js";
-import type { Message, Reaction } from "../slack/types.js";
+import type { Message, Reaction, FormattedMessage } from "../slack/types.js";
 import { mapSlackError, formatErrorForMcp } from "../utils/errors.js";
 import { buildCursorPaginationResult } from "../utils/pagination.js";
+import { formatRelativeTime } from "../utils/format/timestamps.js";
+import { compressReactions } from "../utils/format/reactions.js";
+import { cleanSlackText } from "../utils/format/slack-markup.js";
+import { resolve as resolveUser } from "../cache/user-cache.js";
+import { resolveChannelId } from "../cache/channel-cache.js";
+import { stripEmpty } from "../utils/format/clean.js";
 
 interface SlackReaction {
   name?: string;
@@ -37,32 +43,61 @@ function mapMessage(msg: SlackMessage): Message {
   };
 }
 
-const reactionSchema = z.object({
-  name: z.string().describe("Emoji name"),
-  count: z.number().describe("Number of users who reacted"),
-  users: z.array(z.string()).describe("User IDs who reacted"),
-});
+/**
+ * Applies the full formatting pipeline to an array of raw messages.
+ */
+async function formatMessages(
+  messages: Message[]
+): Promise<FormattedMessage[]> {
+  // 1. Batch-resolve user IDs to "displayName (userId)" format
+  const userIds = [...new Set(messages.map((m) => m.userId))];
+  const displayNames = new Map<string, string>();
+  for (const id of userIds) {
+    displayNames.set(id, await resolveUser(id));
+  }
 
-const messageSchema = z.object({
-  ts: z.string().describe("Message timestamp (unique identifier)"),
-  userId: z.string().describe("ID of the user who sent the message"),
-  text: z.string().describe("Message text content"),
-  threadTs: z.string().nullable().describe("Thread parent timestamp, if in a thread"),
-  replyCount: z.number().nullable().describe("Number of replies, if thread parent"),
-  reactions: z.array(reactionSchema).describe("Reactions on the message"),
+  // 2. Format each message
+  const formatted = await Promise.all(
+    messages.map(async (msg) => {
+      const result: FormattedMessage = {
+        id: msg.ts,
+        time: formatRelativeTime(msg.ts),
+        user: displayNames.get(msg.userId) ?? msg.userId,
+        text: await cleanSlackText(msg.text),
+        threadId: msg.threadTs ?? undefined,
+        replyCount: msg.replyCount ?? undefined,
+        reactions: compressReactions(msg.reactions),
+      };
+      return result;
+    })
+  );
+
+  // 3. Strip empties, then restore required fields
+  const stripped = stripEmpty(formatted) as FormattedMessage[];
+  return stripped.map(msg => ({ ...msg, text: msg.text ?? "" }));
+}
+
+const formattedMessageSchema = z.object({
+  id: z.string().describe("Message ID — pass to ts params"),
+  time: z.string().describe("Human-readable time"),
+  user: z.string().describe("Display name with user ID: 'name (U...)'"),
+  text: z.string().describe("Message text (cleaned markup, resolved mentions)"),
+  threadId: z.string().optional().describe("Thread ID — pass to get_thread_replies thread_ts param. Only present on thread replies."),
+  replyCount: z.number().optional().describe("Number of thread replies"),
+  reactions: z.record(z.string(), z.number()).optional().describe("Emoji reactions {name: count}"),
 });
 
 const messagesOutputSchema = {
-  messages: z.array(messageSchema).describe("List of messages"),
+  messages: z.array(formattedMessageSchema).describe("List of messages"),
   nextCursor: z
     .string()
     .nullable()
-    .describe("Cursor for next page, null if no more results"),
-  hasMore: z.boolean().describe("Whether more results are available"),
+    .optional()
+    .describe("Cursor for next page"),
 };
 
 const channelHistoryInputSchema = {
-  channel_id: z.string().describe("Channel ID (e.g., C1234567890)"),
+  channel_id: z.string().describe("Channel ID (C123) or name ('general', '#general')"),
   limit: z
     .number()
     .min(1)
@@ -73,22 +108,46 @@ const channelHistoryInputSchema = {
     .string()
     .optional()
     .describe("Pagination cursor from previous response"),
-  oldest: z.string().optional().describe("Only messages after this timestamp"),
-  latest: z.string().optional().describe("Only messages before this timestamp"),
+  oldest: z
+    .string()
+    .optional()
+    .describe(
+      "Only messages after this timestamp. Unix epoch with microseconds (e.g. '1706745600.000000'). " +
+      "Can be a message 'id' or a computed epoch for time-based queries."
+    ),
+  latest: z
+    .string()
+    .optional()
+    .describe(
+      "Only messages before this timestamp. Unix epoch with microseconds (e.g. '1706745600.000000'). " +
+      "Can be a message 'id' or a computed epoch for time-based queries."
+    ),
 };
 
 server.registerTool(
   "get_channel_history",
   {
-    description: "Retrieve message history from a specific channel",
+    description:
+      "Get messages from a channel. Accepts channel ID or name (e.g. 'general'). " +
+      "Each message has an 'id' and optionally 'threadId'. " +
+      "To read a thread, pass the threadId (NOT the message id) as thread_ts to get_thread_replies. " +
+      "Slack URLs: extract channel ID from /archives/C.../p..., convert p-timestamp by inserting dot before last 6 digits (p1234567890123456 → 1234567890.123456). " +
+      "Typical flow: search_messages → get_channel_history → get_thread_replies.",
     inputSchema: channelHistoryInputSchema,
     outputSchema: messagesOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
   async ({ channel_id, limit, cursor, oldest, latest }) => {
+    let resolvedChannelId = channel_id;
     try {
+      resolvedChannelId = await resolveChannelId(channel_id);
       const client = getSlackClient();
       const response = await client.conversations.history({
-        channel: channel_id,
+        channel: resolvedChannelId,
         limit: limit ?? 50,
         cursor: cursor ?? undefined,
         oldest: oldest ?? undefined,
@@ -99,40 +158,50 @@ server.registerTool(
         throw new Error(response.error ?? "Unknown Slack API error");
       }
 
-      const messages = (response.messages ?? []).map((msg) =>
+      const rawMessages = (response.messages ?? []).map((msg) =>
         mapMessage(msg as SlackMessage)
       );
+
+      const messages = await formatMessages(rawMessages);
 
       const result = buildCursorPaginationResult(
         messages,
         response.response_metadata
       );
 
-      const output = {
+      const output = stripEmpty({
         messages: result.items,
         nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
-      };
+      });
+
+      // Restore required text field stripped by stripEmpty (file shares, bot messages have no text)
+      for (const m of output.messages) {
+        if (!("text" in m)) (m as Record<string, unknown>).text = "";
+      }
 
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
       };
     } catch (error) {
-      const mcpError = mapSlackError(error, { channelId: channel_id });
+      const mcpError = mapSlackError(error, { channelId: resolvedChannelId });
       return formatErrorForMcp(mcpError);
     }
   }
 );
 
 const threadRepliesInputSchema = {
-  channel_id: z.string().describe("Channel ID containing the thread"),
-  thread_ts: z.string().describe("Timestamp of the parent message"),
+  channel_id: z.string().describe("Channel ID or name containing the thread"),
+  thread_ts: z
+    .string()
+    .describe(
+      "Timestamp of the parent message (e.g. '1706745600.123456'). Use the threadId from message output, NOT the message id."
+    ),
   limit: z
     .number()
     .min(1)
@@ -149,15 +218,22 @@ server.registerTool(
   "get_thread_replies",
   {
     description:
-      "Retrieve all replies in a message thread, including the parent message",
+      "Get thread replies. Accepts channel ID or name. Pass the threadId from a message as thread_ts. Do NOT pass a regular message id — that causes thread_not_found errors.",
     inputSchema: threadRepliesInputSchema,
     outputSchema: messagesOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
   async ({ channel_id, thread_ts, limit, cursor }) => {
+    let resolvedChannelId = channel_id;
     try {
+      resolvedChannelId = await resolveChannelId(channel_id);
       const client = getSlackClient();
       const response = await client.conversations.replies({
-        channel: channel_id,
+        channel: resolvedChannelId,
         ts: thread_ts,
         limit: limit ?? 50,
         cursor: cursor ?? undefined,
@@ -167,33 +243,39 @@ server.registerTool(
         throw new Error(response.error ?? "Unknown Slack API error");
       }
 
-      const messages = (response.messages ?? []).map((msg) =>
+      const rawMessages = (response.messages ?? []).map((msg) =>
         mapMessage(msg as SlackMessage)
       );
+
+      const messages = await formatMessages(rawMessages);
 
       const result = buildCursorPaginationResult(
         messages,
         response.response_metadata
       );
 
-      const output = {
+      const output = stripEmpty({
         messages: result.items,
         nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
-      };
+      });
+
+      // Restore required text field stripped by stripEmpty (file shares, bot messages have no text)
+      for (const m of output.messages) {
+        if (!("text" in m)) (m as Record<string, unknown>).text = "";
+      }
 
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
       };
     } catch (error) {
       const mcpError = mapSlackError(error, {
-        channelId: channel_id,
+        channelId: resolvedChannelId,
         threadTs: thread_ts,
       });
       return formatErrorForMcp(mcpError);

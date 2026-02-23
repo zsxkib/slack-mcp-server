@@ -38,15 +38,19 @@ const listChannelsOutputSchema = {
     .string()
     .nullable()
     .describe("Cursor for next page, null if no more results"),
-  hasMore: z.boolean().describe("Whether more results are available"),
 };
 
 server.registerTool(
   "list_channels",
   {
-    description: "List all accessible public channels in the Slack workspace",
+    description: "List public channels. You can pass channel names directly to get_channel_history — no need to call this first just to get IDs.",
     inputSchema: listChannelsInputSchema,
     outputSchema: listChannelsOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
   async ({ limit, cursor, exclude_archived }) => {
     try {
@@ -80,14 +84,13 @@ server.registerTool(
       const output = {
         channels: result.items,
         nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
       };
 
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,

@@ -78,39 +78,43 @@ export interface UserProfile {
   image72: string | null;
 }
 
-export interface SearchResult {
-  ts: string;
+/**
+ * LLM-friendly formatted message — produced by the formatting pipeline.
+ * Separates human-readable time from machine IDs for clean output.
+ */
+export interface FormattedMessage {
+  id: string;
+  time: string;
+  user: string;
   text: string;
-  userId: string;
-  username: string;
-  channelId: string;
-  channelName: string;
-  permalink: string;
+  threadId?: string;
+  replyCount?: number;
+  reactions?: Record<string, number>;
+}
+
+/**
+ * LLM-friendly formatted search result.
+ * Combines redundant fields: channel = "#name (ID)", separates IDs from display.
+ */
+export interface FormattedSearchResult {
+  id: string;
+  channel: string;
+  user: string;
+  time: string;
+  text: string;
+  threadId?: string;
+  threadParent?: {
+    user: string;
+    time: string;
+    text: string;
+  };
 }
 
 // Pagination types
 
-export interface CursorPaginationParams {
-  limit?: number;
-  cursor?: string;
-}
-
 export interface CursorPaginationResult<T> {
   items: T[];
   nextCursor: string | null;
-  hasMore: boolean;
-}
-
-export interface PagePaginationParams {
-  count?: number;
-  page?: number;
-}
-
-export interface PagePaginationResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageCount: number;
 }
 
 // Error types

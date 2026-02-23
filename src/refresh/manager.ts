@@ -5,6 +5,7 @@ import type {
   RefreshError as RefreshErrorType,
 } from "../slack/types.js";
 import { RefreshError, isRetryableRefreshError } from "../utils/errors.js";
+import { logError } from "../utils/error-log.js";
 import {
   loadCredentials,
   saveCredentials,
@@ -145,7 +146,7 @@ export class RefreshManager {
         isManualTrigger: false,
       };
 
-      console.log(
+      console.error(
         `[RefreshManager] Credential refresh successful (${isManual ? "manual" : "auto"}). ` +
           `Total refreshes: ${updatedCredentials.metadata.refreshCount}`
       );
@@ -166,6 +167,14 @@ export class RefreshManager {
       console.error(
         `[RefreshManager] Credential refresh failed: ${refreshError.code} - ${refreshError.message}`
       );
+      logError({
+        level: "error",
+        component: "RefreshManager",
+        code: refreshError.code,
+        message: refreshError.message,
+        attempt: refreshError.attempt,
+        retryable: refreshError.retryable,
+      });
 
       return { success: false, error: refreshError };
     }
@@ -335,7 +344,7 @@ export class RefreshManager {
         );
       }
 
-      console.log(
+      console.error(
         `[RefreshManager] Credentials validated for user: ${result.user_id}`
       );
     } catch (error) {
@@ -452,7 +461,7 @@ export class RefreshManager {
           isManualTrigger: false,
         };
 
-        console.log(
+        console.error(
           `[RefreshManager] Credential refresh successful (${isManual ? "manual" : "auto"}, ` +
             `attempt ${attempt}/${RETRY_CONFIG.maxAttempts}). ` +
             `Total refreshes: ${updatedCredentials.metadata.refreshCount}`
@@ -467,6 +476,14 @@ export class RefreshManager {
           `[RefreshManager] Refresh attempt ${attempt}/${RETRY_CONFIG.maxAttempts} failed: ` +
             `${lastError.code} - ${lastError.message}`
         );
+        logError({
+          level: "warn",
+          component: "RefreshManager",
+          code: lastError.code,
+          message: lastError.message,
+          attempt: lastError.attempt,
+          retryable: lastError.retryable,
+        });
 
         // Check if error is retryable and we have attempts left
         if (!isRetryableRefreshError(lastError.code) || attempt >= RETRY_CONFIG.maxAttempts) {
@@ -476,7 +493,7 @@ export class RefreshManager {
 
         // Calculate delay with exponential backoff and jitter
         const delay = this.calculateBackoffDelay(attempt);
-        console.log(
+        console.error(
           `[RefreshManager] Retrying in ${Math.round(delay / 1000)}s...`
         );
 

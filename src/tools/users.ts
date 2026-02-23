@@ -58,15 +58,19 @@ const listUsersOutputSchema = {
     .string()
     .nullable()
     .describe("Cursor for next page, null if no more results"),
-  hasMore: z.boolean().describe("Whether more results are available"),
 };
 
 server.registerTool(
   "list_users",
   {
-    description: "List all users in the Slack workspace",
+    description: "List workspace users. User IDs are already included in message outputs — no need to call this to resolve user IDs from messages.",
     inputSchema: listUsersInputSchema,
     outputSchema: listUsersOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
   async ({ limit, cursor }) => {
     try {
@@ -92,14 +96,13 @@ server.registerTool(
       const output = {
         users: result.items,
         nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
       };
 
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
@@ -133,9 +136,15 @@ const getUserProfileOutputSchema = {
 server.registerTool(
   "get_user_profile",
   {
-    description: "Get detailed profile information for a specific user",
+    description:
+      "Get detailed profile information for a specific user. " +
+      "User IDs are included in message output as 'name (U...)' — extract the ID in parens.",
     inputSchema: getUserProfileInputSchema,
     outputSchema: getUserProfileOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+    },
   },
   async ({ user_id }) => {
     try {
@@ -166,7 +175,7 @@ server.registerTool(
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,

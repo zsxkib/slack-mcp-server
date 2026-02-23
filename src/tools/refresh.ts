@@ -29,6 +29,10 @@ server.registerTool(
       "Only available when using user token authentication.",
     inputSchema: {},
     outputSchema,
+    annotations: {
+      destructiveHint: false,
+      idempotentHint: true,
+    },
   },
   async () => {
     // Check if using bot token authentication
@@ -48,7 +52,7 @@ server.registerTool(
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
@@ -71,7 +75,7 @@ server.registerTool(
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
@@ -93,7 +97,7 @@ server.registerTool(
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,
@@ -111,7 +115,7 @@ server.registerTool(
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(output, null, 2),
+            text: JSON.stringify(output),
           },
         ],
         structuredContent: output,

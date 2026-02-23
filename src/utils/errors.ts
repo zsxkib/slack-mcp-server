@@ -1,4 +1,5 @@
 import type { SlackMcpError, RefreshErrorCode } from "../slack/types.js";
+import { logError } from "./error-log.js";
 
 /**
  * Error class for credential refresh failures
@@ -151,10 +152,24 @@ export function mapSlackError(
   };
 }
 
-export function formatErrorForMcp(error: SlackMcpError): {
+export function formatErrorForMcp(
+  error: SlackMcpError,
+  toolName?: string,
+  context?: ErrorContext
+): {
   content: Array<{ type: "text"; text: string }>;
   isError: true;
 } {
+  logError({
+    level: "error",
+    component: "SlackAPI",
+    code: error.code,
+    message: error.message,
+    tool: toolName,
+    context: context as Record<string, unknown> | undefined,
+    retryable: error.retryable,
+  });
+
   let text = `Error: ${error.code} - ${error.message}`;
   if (error.retryAfter !== undefined) {
     text += `. Please retry after ${error.retryAfter} seconds.`;

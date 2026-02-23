@@ -22,12 +22,12 @@ export class RefreshScheduler {
    */
   start(): void {
     if (this.running) {
-      console.log("[RefreshScheduler] Scheduler is already running");
+      console.error("[RefreshScheduler] Scheduler is already running");
       return;
     }
 
     if (!this.schedule.enabled) {
-      console.log(
+      console.error(
         "[RefreshScheduler] Scheduler is disabled (bot token auth or refresh disabled)"
       );
       return;
@@ -46,7 +46,7 @@ export class RefreshScheduler {
     );
 
     const config = getRefreshConfig();
-    console.log(
+    console.error(
       `[RefreshScheduler] Started. Refresh interval: ${this.schedule.intervalDays} days, ` +
         `Check interval: ${this.schedule.checkIntervalMs / 1000}s, ` +
         `Workspace: ${config.workspace}`
@@ -62,7 +62,7 @@ export class RefreshScheduler {
       this.intervalId = null;
     }
     this.running = false;
-    console.log("[RefreshScheduler] Stopped");
+    console.error("[RefreshScheduler] Stopped");
   }
 
   /**
@@ -97,7 +97,7 @@ export class RefreshScheduler {
 
     // Skip if manager is already refreshing
     if (this.manager.isInProgress()) {
-      console.log("[RefreshScheduler] Skipping check - refresh in progress");
+      console.error("[RefreshScheduler] Skipping check - refresh in progress");
       return;
     }
 
@@ -106,14 +106,14 @@ export class RefreshScheduler {
       return;
     }
 
-    console.log("[RefreshScheduler] Refresh is due, triggering auto-refresh with retry");
+    console.error("[RefreshScheduler] Refresh is due, triggering auto-refresh with retry");
 
     try {
       // Use refreshWithRetry for automatic refresh to handle transient errors
       const result = await this.manager.refreshWithRetry(false); // isManual = false
 
       if (result.success) {
-        console.log(
+        console.error(
           `[RefreshScheduler] Auto-refresh successful. Next refresh scheduled in ${this.schedule.intervalDays} days`
         );
       } else {
@@ -134,7 +134,7 @@ export class RefreshScheduler {
    * @returns The result of the refresh operation
    */
   async triggerManual(): Promise<RefreshResult> {
-    console.log("[RefreshScheduler] Manual refresh triggered");
+    console.error("[RefreshScheduler] Manual refresh triggered");
     return this.manager.refreshWithRetry(true); // isManual = true
   }
 }
